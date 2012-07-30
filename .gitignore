@@ -21,3 +21,4 @@ maven-eclipse.xml
 .idea/
 build
 tapestry5-jquery.iml
+out/

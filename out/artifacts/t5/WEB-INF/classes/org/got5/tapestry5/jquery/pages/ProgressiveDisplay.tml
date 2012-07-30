@@ -1,7 +1,0 @@
-<html t:type="layout" xmlns:t="http://tapestry.apache.org/schema/tapestry_5_3.xsd" xmlns:p="tapestry:parameter">
-   
-<t:progressiveDisplay />
-	<t:block id="testBlock">
-		this is progressive display !
-	</t:block>
-</html>
