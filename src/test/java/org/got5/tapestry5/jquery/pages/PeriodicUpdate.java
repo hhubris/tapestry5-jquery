@@ -28,23 +28,20 @@ public class PeriodicUpdate {
     @InjectComponent
     private org.apache.tapestry5.corelib.components.Zone zone2;
 
-
-    @OnEvent(value = "update", component = "zone1")
-    Object onUpdateZone1() {
+    void setupRender() {
         if (zone1Count == null) {
             zone1Count = 0;
+            zone2Count = 0;
         }
+    }
 
+    @OnEvent(value = "update", component = "zone1")
+    Object onZone1Update() {
         zone1Count++;
         return request.isXHR() ? zone1.getBody() : null;
     }
 
-    @OnEvent(value = "update", component = "zone2")
-    Object onUpdateZone2() {
-        if (zone2Count == null) {
-            zone2Count = 0;
-        }
-
+    Object onUpdateFromZone2() {
         zone2Count++;
         return request.isXHR() ? zone2.getBody() : null;
 

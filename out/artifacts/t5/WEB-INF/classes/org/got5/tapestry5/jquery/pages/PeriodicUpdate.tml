@@ -1,0 +1,10 @@
+<html t:type="layout" xmlns:t="http://tapestry.apache.org/schema/tapestry_5_3.xsd" xmlns:p="tapestry:parameter">
+
+<t:zone t:id="zone1" t:mixins="periodicUpdate" updateFrequency="5s">
+    Zone 1 : ${zone1Count} (updates every 5s)
+</t:zone>
+<t:zone t:id="zone2" t:mixins="periodicUpdate" updateFrequency="8s">
+    Zone 2 : ${zone2Count} (updates every 8s)
+</t:zone>
+
+</html>
