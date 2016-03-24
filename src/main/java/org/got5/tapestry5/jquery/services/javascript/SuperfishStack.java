@@ -9,7 +9,13 @@ import org.apache.tapestry5.func.Mapper;
 import org.apache.tapestry5.services.AssetSource;
 import org.apache.tapestry5.services.javascript.JavaScriptStack;
 import org.apache.tapestry5.services.javascript.StylesheetLink;
+import org.got5.tapestry5.jquery.components.Superfish;
 
+/**
+ * Resource stack for {@link Superfish}.
+ *
+ * @author Emmanuel DEMEY
+ */
 public class SuperfishStack implements JavaScriptStack {
 
 	public static final String STACK_ID = "SuperfishStack";
@@ -26,13 +32,13 @@ public class SuperfishStack implements JavaScriptStack {
 		};
 
 		javaScriptStack = F
-				.flow("${assets.path}/components/superfish/js/hoverIntent.js",
+				.flow("${assets.path}/components/superfish/js/jquery.hoverIntent.js",
 						"${assets.path}/components/superfish/js/jquery.bgiframe.min.js",
 						"${assets.path}/components/superfish/js/superfish.js",
 						"${assets.path}/components/superfish/js/supersubs.js",
 						"${assets.path}/components/superfish/js/mySuperfish.js")
 				.map(pathToAsset).toList();
-		
+
 	}
 
 	public List<String> getStacks() {

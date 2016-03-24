@@ -35,9 +35,14 @@
 				}
 				
 				var u = new Object();
-				u.url = url;		
-				u.context = contextMarker;					
+				u.url = url;
+				
+				//If the element using the bind mixin has a value, we automatically added to tue url
+				if($(this).val() !== "") u.url += ("/" + $(this).val()) 	
+					
+				u.context = contextMarker;		
 				u.element = $(this);
+				
 				if ( history ) {
 					history(event,ui,u);
 				}
@@ -51,7 +56,10 @@
 					if ( zoneId ) {
 						zoneElement.tapestryZone("update",{url : u.url});
 					} else {
-						$.ajax({url: u.url});
+						$.ajax({
+							type: "POST",
+							url: u.url
+						});
 					}
 				}
 			});

@@ -20,13 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.tapestry5.ComponentResources;
-import org.apache.tapestry5.EventConstants;
-import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.OnEvent;
 import org.apache.tapestry5.annotations.Persist;
 import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.beaneditor.BeanModel;
-import org.apache.tapestry5.corelib.components.Zone;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.json.JSONObject;
 import org.apache.tapestry5.services.BeanModelSource;
@@ -56,9 +53,11 @@ public class DocsInPlaceEditor
 	    
 	@Inject
 	private Request request;
-	
+
 	void setupRender() {
-		users = createUsers(50);
+		if (users == null) {
+			users = createUsers(50);
+		}
 	}
 	
 	public BeanModel getMyModel(){
@@ -92,7 +91,7 @@ public class DocsInPlaceEditor
 	    return users;
 	}
 	
-	@OnEvent(component = "inPlaceEditor", value = InPlaceEditor.SAVE_EVENT)
+	@OnEvent(component = "inPlaceEditorExample", value = InPlaceEditor.SAVE_EVENT)
 	void actionFromEditor(Long id, String value)
 	{
 		User user = (User)users.get(id.intValue());

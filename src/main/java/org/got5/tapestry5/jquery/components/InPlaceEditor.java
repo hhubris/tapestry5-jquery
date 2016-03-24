@@ -15,12 +15,14 @@
 package org.got5.tapestry5.jquery.components;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.tapestry5.BindingConstants;
 import org.apache.tapestry5.ClientElement;
 import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;
+import org.apache.tapestry5.EventContext;
 import org.apache.tapestry5.Link;
 import org.apache.tapestry5.MarkupWriter;
 import org.apache.tapestry5.StreamResponse;
@@ -32,9 +34,13 @@ import org.apache.tapestry5.annotations.SupportsInformalParameters;
 import org.apache.tapestry5.ioc.Messages;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.json.JSONObject;
+import org.apache.tapestry5.services.AssetSource;
+import org.apache.tapestry5.services.ContextValueEncoder;
 import org.apache.tapestry5.services.Request;
+import org.apache.tapestry5.services.javascript.JavaScriptStackSource;
 import org.apache.tapestry5.services.javascript.JavaScriptSupport;
 import org.apache.tapestry5.util.TextStreamResponse;
+import org.got5.tapestry5.jquery.services.javascript.InPlaceEditorStack;
 import org.got5.tapestry5.jquery.utils.JQueryUtils;
 
 
@@ -47,8 +53,7 @@ import org.got5.tapestry5.jquery.utils.JQueryUtils;
  */
 @Events(InPlaceEditor.SAVE_EVENT)
 @SupportsInformalParameters
-@Import(library = {"${assets.path}/components/jeditable/jquery.jeditable.js",
-				   "${assets.path}/components/jeditable/jeditable.js"})
+@Import(stack = InPlaceEditorStack.STACK_ID)
 public class InPlaceEditor implements ClientElement
 {
 	public final static String SAVE_EVENT = "save";
@@ -93,6 +98,15 @@ public class InPlaceEditor implements ClientElement
 	@Inject
 	private Request request;
 
+	@Inject
+	private JavaScriptStackSource stacks;
+	
+	@Inject
+	private AssetSource as;
+
+	@Inject
+	private ContextValueEncoder valueEncoder;
+
 	private String assignedClientId;
 
 	private Object[] contextArray;
@@ -101,6 +115,8 @@ public class InPlaceEditor implements ClientElement
 	{
 		assignedClientId = javascriptSupport.allocateClientId(clientId);
 		contextArray = context == null ? new Object[0] : context.toArray();
+		
+		
 	}
 
 	void beginRender(MarkupWriter writer)
@@ -115,6 +131,7 @@ public class InPlaceEditor implements ClientElement
 
 	void afterRender(MarkupWriter writer)
 	{
+		
 		Link link = resources.createEventLink(EventConstants.ACTION, contextArray);
 		JSONObject spec = new JSONObject();
 
@@ -135,11 +152,14 @@ public class InPlaceEditor implements ClientElement
 		javascriptSupport.addInitializerCall("editable", spec);
 	}
 
-	StreamResponse onAction(String value) throws UnsupportedEncodingException
+	StreamResponse onAction(EventContext eventContext) throws UnsupportedEncodingException
 	{
 		String valueText = request.getParameter("value");
 
-		resources.triggerEvent(SAVE_EVENT, new Object[]{value, valueText}, null);
+		contextArray = Arrays.copyOf(eventContext.toStrings(), eventContext.getCount() + 1);
+		contextArray[contextArray.length - 1] = valueText;
+
+		resources.triggerEvent(SAVE_EVENT, contextArray, null);
 
 		if (valueText == null || valueText.length() == 0)
 			valueText = messages.get("empty");

@@ -31,199 +31,189 @@ import org.apache.tapestry5.services.javascript.JavaScriptStackSource;
 import org.apache.tapestry5.services.javascript.StylesheetLink;
 import org.got5.tapestry5.jquery.JQuerySymbolConstants;
 import org.got5.tapestry5.jquery.services.EffectsParam;
+import org.got5.tapestry5.jquery.services.JavaScriptFilesConfiguration;
 import org.got5.tapestry5.jquery.utils.JQueryUtils;
 
 /**
  * Replacement for {@link CoreJavaScriptStack}.
- *
+ * 
  * @author criedel, GOT5
  */
 public class JQueryJavaScriptStack implements JavaScriptStack {
 
-    private final boolean minified;
-    
-    private String jQueryAlias;
-    
-    private final boolean suppressPrototype;
+	private final boolean minified;
 
-    private final List<Asset> jQueryJsStack;
-    
-    private final AssetSource assetSource;
-      
-    private final JavaScriptStackSource jsStackSource;
+	private final boolean suppressPrototype;
 
-    private EffectsParam effectsParam;
+	private final boolean mouseWheel;
+	
+	private final boolean excludeJsCore;
 
-    public JQueryJavaScriptStack(@Symbol(JQuerySymbolConstants.USE_MINIFIED_JS)
-                                 final boolean minified,
-                                 
-                                 @Symbol(JQuerySymbolConstants.JQUERY_ALIAS)
-                                 final String jQueryAlias,
-                                 
-                                 @Symbol(JQuerySymbolConstants.SUPPRESS_PROTOTYPE)
-                                 final boolean suppressPrototype,
+	private String jQueryAlias;
 
-                                 final AssetSource assetSource, 
-                   
-                                 final JavaScriptStackSource jsStackSrc,
+	private final List<Asset> jQueryJsStack;
 
-    							 final SymbolSource symbolSource, 
-    							 
-    							 final EffectsParam effectsParam)
+	private final AssetSource assetSource;
 
-    {
-    	
-        this.minified = minified;
-        this.suppressPrototype = suppressPrototype;
-        this.assetSource = assetSource;
-        this.jQueryAlias = jQueryAlias;
-        this.jsStackSource = jsStackSrc;
-        this.effectsParam = effectsParam;
+	private final JavaScriptStackSource jsStackSource;
 
+	private EffectsParam effectsParam;
 
-        final Mapper<String, Asset> pathToAsset = new Mapper<String, Asset>()
-        {
-            public Asset map(String path)
-            {
-            	if(minified){
-            		
-            		String pathMin = symbolSource.expandSymbols(path);
-            		
-            		if(path.equalsIgnoreCase("${jquery.core.path}")){
-            			path = new StringBuffer(pathMin).insert(pathMin.lastIndexOf(".js"), ".min").toString();
-            		}
-            		else if(path.contains("${jquery.ui.path}")){
-            			path = new StringBuffer(pathMin).insert(pathMin.lastIndexOf(".js"), ".min")
-            											.insert(pathMin.lastIndexOf('/'), "/minified").toString();
-            		}
-            	}
-            	
-                return assetSource.getExpandedAsset(path);
-            }
-        };
+	private JavaScriptFilesConfiguration jsConf;
 
-        final Mapper<String, StylesheetLink> pathToStylesheetLink = F.combine(pathToAsset, JQueryUtils.assetToStylesheetLink);
+	public JQueryJavaScriptStack(
+			@Symbol(JQuerySymbolConstants.USE_MINIFIED_JS) final boolean minified,
 
-        jQueryJsStack = F
-                .flow(  "${jquery.core.path}",
-                        "${jquery.ui.path}/jquery.ui.core.js",
-                        "${jquery.ui.path}/jquery.ui.position.js",
-                        "${jquery.ui.path}/jquery.ui.widget.js",
-                        "${jquery.ui.path}/jquery.effects.core.js",
-                        "${tapestry.jquery.path}/jquery.json-2.2.js")
-            .concat(F.flow(this.effectsParam.getEffectsToLoad())).map(pathToAsset).toList();
+			@Symbol(JQuerySymbolConstants.JQUERY_ALIAS) final String jQueryAlias,
 
-    }
-    
-    public String getInitialization()
-    {
-    	if(!suppressPrototype && jQueryAlias.equals("$"))
-    		throw new RuntimeException("You are using an application based on Prototype" +
-    				" and jQuery. You should set in your AppModule the alias for the jQuery object to a different" +
-    				" value than '$'");
-    	
-    	return minified ? "var "+jQueryAlias+" = jQuery; Tapestry.JQUERY="+suppressPrototype+";" : "var "+jQueryAlias+" = jQuery; Tapestry.DEBUG_ENABLED = true; var selector = new Array(); Tapestry.JQUERY="+suppressPrototype+";";
-    }
-    
-    /**
-     * Asset in Prototype, have to be changed by a jQuery version
-    */
-    public Object chooseJavascript(Asset asset){
-    	
-    	if(suppressPrototype)
-    	{
-    		if(asset.getResource().getFile().endsWith("t5-prototype.js"))
-    		{
-    			return this.assetSource.getExpandedAsset("${tapestry.jquery.path}/t5-jquery.js");
-    		}
-    		
-    		if(asset.getResource().getFile().endsWith("tapestry.js"))
-    		{
-    			return this.assetSource.getExpandedAsset("${tapestry.jquery.path}/tapestry-jquery.js");
-    		}
-    		if(asset.getResource().getFile().endsWith("t5-console.js"))
-    		{
-    			return this.assetSource.getExpandedAsset("${tapestry.jquery.path}/t5-console-jquery.js");
-    		}
-    		if(asset.getResource().getFile().endsWith("t5-dom.js"))
-    		{
-    			return this.assetSource.getExpandedAsset("${tapestry.jquery.path}/t5-dom-jquery.js");
-    		}
-    		if(asset.getResource().getFile().endsWith("t5-alerts.js"))
-    		{
-    			return this.assetSource.getExpandedAsset("${tapestry.jquery.path}/t5-alerts-jquery.js");
-    		}
-    		if(asset.getResource().getFile().endsWith("t5-ajax.js"))
-    		{
-    			return this.assetSource.getExpandedAsset("${tapestry.jquery.path}/t5-ajax-jquery.js");
-    		}
-    		if(asset.getResource().getFile().endsWith("tree.js"))
-    		{
-    			return this.assetSource.getExpandedAsset("${tapestry.jquery.path}/t5-tree-jquery.js");
-    		}
-    		if(asset.getResource().getFile().endsWith("prototype.js") || 
-    				asset.getResource().getFile().endsWith("scriptaculous.js") ||
-    				asset.getResource().getFile().endsWith("effects.js") || 
-    				asset.getResource().getFile().endsWith("exceptiondisplay.js"))
-    		{
-    			return null;
-    		}
-    		
-    	}
-    	
-    	return asset;
-    }
-    
-    public List<Asset> getJavaScriptLibraries()
-    {
-    	List<Asset> ret = new ArrayList<Asset>();
-    	
-    	if(suppressPrototype)
-    	{
-    		ret.add(this.assetSource.getExpandedAsset("${tapestry.js.path}"));
-    	}
-    	
-    	ret.addAll(jQueryJsStack);
-    	
-    	if(!suppressPrototype){
-    		ret.add(this.assetSource.getExpandedAsset("${tapestry.jquery.path}/noconflict.js"));
-    	}
-    	
-    	for(Asset asset : jsStackSource.getStack(JQuerySymbolConstants.PROTOTYPE_STACK).getJavaScriptLibraries())
-    	{
-    		asset=(Asset) chooseJavascript(asset);
-    		if(asset!=null) ret.add(asset);
-    	}
-    	
-    	if(!suppressPrototype){
-    		ret.add(this.assetSource.getExpandedAsset("${tapestry.jquery.path}/jquery-noconflict.js"));
-    	}
-  
-    	return ret;
-        
-    }
+			@Symbol(JQuerySymbolConstants.SUPPRESS_PROTOTYPE) final boolean suppressPrototype,
 
-    public List<StylesheetLink> getStylesheets()
-    {
-    	List<StylesheetLink> ret = new ArrayList<StylesheetLink>();
-    	
-    	if(!suppressPrototype)
-    	{
-     		ret.addAll(jsStackSource.getStack(JQuerySymbolConstants.PROTOTYPE_STACK).getStylesheets());
-    	}
-    	else
-    	{
-    		for(StylesheetLink css : jsStackSource.getStack(JQuerySymbolConstants.PROTOTYPE_STACK).getStylesheets()){
-    			if(css.getURL().endsWith("t5-alerts.css") || css.getURL().endsWith("tapestry-console.css") ||
-    					css.getURL().endsWith("tree.css")) ret.add(css);
-    		}
-    	}
- 		return ret;
-    }
+			@Symbol(JQuerySymbolConstants.ADD_MOUSEWHEEL_EVENT) final boolean mouseWheel,
+			
+			@Symbol(JQuerySymbolConstants.EXCLUDE_CORE_JS_STACK) final boolean excludeJsCore,
 
-    public List<String> getStacks()
-    {
-        return Collections.emptyList();
-    }
+			final AssetSource assetSource,
+
+			final JavaScriptStackSource jsStackSrc,
+
+			final SymbolSource symbolSource,
+
+			final EffectsParam effectsParam,
+
+			final JavaScriptFilesConfiguration jsConf)
+
+	{
+
+		this.minified = minified;
+		this.suppressPrototype = suppressPrototype;
+		this.mouseWheel = mouseWheel;
+		this.excludeJsCore= excludeJsCore;
+
+		this.assetSource = assetSource;
+		this.jQueryAlias = jQueryAlias;
+		this.jsStackSource = jsStackSrc;
+		this.effectsParam = effectsParam;
+		this.jsConf = jsConf;
+
+		final Mapper<String, Asset> pathToAsset = new Mapper<String, Asset>() {
+			public Asset map(String path) {
+				if (minified) {
+
+					String pathMin = symbolSource.expandSymbols(path);
+
+					if (path.equalsIgnoreCase("${jquery.core.path}")) {
+						path = new StringBuffer(pathMin).insert(
+								pathMin.lastIndexOf(".js"), ".min").toString();
+					} else if (path.contains("${jquery.ui.path}")) {
+						path = new StringBuffer(pathMin)
+								.insert(pathMin.lastIndexOf(".js"), ".min")
+								.insert(pathMin.lastIndexOf('/'), "/minified")
+								.toString();
+					}
+				}
+
+				return assetSource.getExpandedAsset(path);
+			}
+		};
+
+		final Mapper<String, StylesheetLink> pathToStylesheetLink = F.combine(
+				pathToAsset, JQueryUtils.assetToStylesheetLink);
+
+		jQueryJsStack = F
+				.flow("${jquery.core.path}",
+						"${jquery.ui.path}/jquery.ui.core.js",
+						"${jquery.ui.path}/jquery.ui.position.js",
+						"${jquery.ui.path}/jquery.ui.widget.js",
+						"${jquery.ui.path}/jquery.effects.core.js",
+						"${tapestry.jquery.path}/jquery.json-2.2.js")
+				.concat(F.flow(this.effectsParam.getEffectsToLoad()))
+				.map(pathToAsset).toList();
+
+	}
+
+	public String getInitialization() {
+		if (!suppressPrototype && (jQueryAlias.equals("$") || jQueryAlias.equals("jQuery")))
+			
+			//If the alias='jQuery', we can have some problem with IE ! 
+			throw new RuntimeException(
+					"You are using an application based on Prototype"
+							+ " and jQuery. You should set in your AppModule the alias for the jQuery object to a different"
+							+ " value than '$' and 'jQuery'");
+	
+		return minified ? "var " + jQueryAlias + " = jQuery; Tapestry.JQUERY="
+				+ suppressPrototype + ";"
+				: "var "
+						+ jQueryAlias
+						+ " = jQuery; Tapestry.DEBUG_ENABLED = true; var selector = new Array(); Tapestry.JQUERY="
+						+ suppressPrototype + ";";
+	}
+
+	/**
+	 * Asset in Prototype, have to be changed by a jQuery version
+	 */
+	public Object chooseJavascript(Asset asset) {
+		return suppressPrototype ? jsConf.getAsset(asset) : asset;
+	}
+
+	public List<Asset> getJavaScriptLibraries() {
+		
+		
+		List<Asset> ret = new ArrayList<Asset>();
+		
+		if (this.excludeJsCore){
+			return ret;
+		}
+
+		if (suppressPrototype) {
+			ret.add(this.assetSource.getExpandedAsset("${tapestry.js.path}"));
+		}
+
+		ret.addAll(jQueryJsStack);
+
+		if (!suppressPrototype) {
+			ret.add(this.assetSource
+					.getExpandedAsset("${tapestry.jquery.path}/noconflict.js"));
+		}
+
+		for (Asset asset : jsStackSource.getStack(
+				JQuerySymbolConstants.PROTOTYPE_STACK).getJavaScriptLibraries()) {
+			asset = (Asset) chooseJavascript(asset);
+			if (asset != null)
+				ret.add(asset);
+		}
+
+		if (!suppressPrototype) {
+			ret.add(this.assetSource
+					.getExpandedAsset("${tapestry.jquery.path}/jquery-noconflict.js"));
+		}
+
+		if (mouseWheel)
+			ret.add(this.assetSource
+					.getExpandedAsset("${tapestry.jquery.path}/jquery_widgets/jquery.mousewheel.js"));
+		return ret;
+
+	}
+
+	public List<StylesheetLink> getStylesheets() {
+		List<StylesheetLink> ret = new ArrayList<StylesheetLink>();
+
+		if (!suppressPrototype) {
+			ret.addAll(jsStackSource.getStack(
+					JQuerySymbolConstants.PROTOTYPE_STACK).getStylesheets());
+		} else {
+			for (StylesheetLink css : jsStackSource.getStack(
+					JQuerySymbolConstants.PROTOTYPE_STACK).getStylesheets()) {
+				if (css.getURL().endsWith("t5-alerts.css")
+						|| css.getURL().endsWith("tapestry-console.css")
+						|| css.getURL().endsWith("tree.css"))
+					ret.add(css);
+			}
+		}
+		return ret;
+	}
+
+	public List<String> getStacks() {
+		return Collections.emptyList();
+	}
 
 }

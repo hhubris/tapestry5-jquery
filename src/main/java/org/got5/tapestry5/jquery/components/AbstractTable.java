@@ -20,7 +20,6 @@ import org.apache.tapestry5.beaneditor.BeanModel;
 import org.apache.tapestry5.beaneditor.PropertyModel;
 import org.apache.tapestry5.corelib.data.GridPagerPosition;
 import org.apache.tapestry5.grid.ColumnSort;
-import org.apache.tapestry5.grid.GridConstants;
 import org.apache.tapestry5.grid.GridDataSource;
 import org.apache.tapestry5.grid.GridSortModel;
 import org.apache.tapestry5.grid.SortConstraint;
@@ -35,6 +34,7 @@ import org.apache.tapestry5.services.BeanModelSource;
 import org.apache.tapestry5.services.Request;
 import org.apache.tapestry5.services.TranslatorSource;
 import org.apache.tapestry5.services.javascript.JavaScriptSupport;
+import org.got5.tapestry5.jquery.internal.TableInformation;
 
 /**
  * @tapestrydoc
@@ -151,6 +151,26 @@ public class AbstractTable implements ClientElement {
 	private boolean inPlace;
 	
 	/**
+	 * Parameter used to define some parameters of a HTML table : caption, summary, css class
+	 */
+
+	@Parameter(required = false)
+	private Object row;
+	
+	@Parameter
+	private int rowIndex;
+	
+	@Parameter(cache = false)
+	private String rowClass;
+	
+	@Property
+	@Parameter(cache=false)
+	private int columnIndex;
+	
+	@Parameter(defaultPrefix = BindingConstants.PROP)
+	private TableInformation tableInformation;
+	
+	/**
 	 * The model parameter after modification due to the add, include, exclude
 	 * and reorder parameters.
 	 */
@@ -176,7 +196,9 @@ public class AbstractTable implements ClientElement {
 	
 	private String clientId;
 	
-	
+	@Property
+	private Integer index;
+
 	@Property
 	private String cellModel;
 	
@@ -187,7 +209,9 @@ public class AbstractTable implements ClientElement {
 	private Request request;
 	
 	public String getClientId() {
-		return (InternalUtils.isNonBlank(resources.getInformalParameter("id", String.class))) ? resources.getInformalParameter("id", String.class) : javaScriptSupport.allocateClientId(resources);
+		if(InternalUtils.isBlank(clientId))
+			clientId = (InternalUtils.isNonBlank(resources.getInformalParameter("id", String.class))) ? resources.getInformalParameter("id", String.class) : javaScriptSupport.allocateClientId(resources);
+		return clientId;
 	}
 
 	public int getRowsPerPage() {
@@ -361,22 +385,9 @@ public class AbstractTable implements ClientElement {
 		
 		
 	}
-	
-	@Parameter(required = true)
-    @Property(write = false)
-    private Object row;
-	
-	@Parameter
-    private int rowIndex;
-	
-	@Parameter(cache = false)
-	private String rowClass;
-	
-	@Property
-	private Integer index;
 
 	/**
-	 * In order get the value of a specific cell
+	 * In order to get the css of a specific row
 	 */
 	public String getRowClass()
     {
@@ -391,9 +402,11 @@ public class AbstractTable implements ClientElement {
        return TapestryInternalUtils.toClassAttributeValue(classes);
     }
 	
+	/**
+	 * In order to get the value of a specific cell
+	 */
 	public Object getCellValue() {
 		
-		rowIndex = index;
 		
 		Object obj = getSource().getRowValue(index);
 
@@ -421,7 +434,7 @@ public class AbstractTable implements ClientElement {
             }
             else
             {
-            	val = val != null ? val.toString() : "";
+            	val = val.toString();
             }
         }
             
@@ -439,6 +452,12 @@ public class AbstractTable implements ClientElement {
 	 * Iterator for the look component in order to loop to each rows
 	 */
 	public Iterable<Integer> getLoopSource() {
+
+		// Issue #284 : call prepared() before calling getRowValue()
+		int startIndex = 0;
+		int endIndex = getSource().getAvailableRows() - 1;
+		getSource().prepare(startIndex, endIndex, sortModel.getSortConstraints());
+
 		return new Iterable<Integer>() {
 
 			public Iterator<Integer> iterator() {
@@ -448,12 +467,11 @@ public class AbstractTable implements ClientElement {
 					Integer i = new Integer(0);
 
 					public boolean hasNext() {
-						
 						return i < getSource().getAvailableRows();
 					}
 
 					public Integer next() {
-						row=getSource().getRowValue(i);
+						row = getSource().getRowValue(i);
 						return i++;
 					}
 
@@ -465,14 +483,34 @@ public class AbstractTable implements ClientElement {
 			}
 		};
 	}
-	
+
+	public Object getRow() {
+		return row;
+	}
+
+	public void setRow(Object row) {
+		this.row = row;
+	}
+
+	public Integer getRowIndex() {
+		return rowIndex;
+	}
+
+	public void setRowIndex(Integer rowIndex) {
+		this.rowIndex = rowIndex;
+	}
+
 	@Inject
 	private Block cell;
 	
 	public Block getCellBlock(){
+		rowIndex = index;
 		Block override = overrides.getOverrideBlock(getDataModel().get(cellModel).getPropertyName()+"Cell");
 		if(override != null) return override;
 		return cell;
 	}
 
+	public TableInformation getTableInformation() {
+		return tableInformation;
+	}
 }

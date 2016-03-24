@@ -32,6 +32,7 @@ import org.apache.tapestry5.ioc.annotations.InjectService;
 import org.apache.tapestry5.ioc.annotations.Primary;
 import org.apache.tapestry5.ioc.annotations.SubModule;
 import org.apache.tapestry5.ioc.annotations.Symbol;
+import org.apache.tapestry5.ioc.annotations.Value;
 import org.apache.tapestry5.ioc.services.FactoryDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
 import org.apache.tapestry5.plastic.MethodAdvice;
@@ -46,18 +47,28 @@ import org.apache.tapestry5.services.transform.ComponentClassTransformWorker2;
 import org.got5.tapestry5.jquery.EffectsConstants;
 import org.got5.tapestry5.jquery.JQuerySymbolConstants;
 import org.got5.tapestry5.jquery.services.impl.EffectsParamImpl;
+import org.got5.tapestry5.jquery.services.impl.JavaScriptFilesConfigurationImpl;
 import org.got5.tapestry5.jquery.services.impl.RenderTrackerImpl;
 import org.got5.tapestry5.jquery.services.impl.WidgetParamsImpl;
 import org.got5.tapestry5.jquery.services.javascript.AjaxUploadStack;
+import org.got5.tapestry5.jquery.services.javascript.ConfirmStack;
+import org.got5.tapestry5.jquery.services.javascript.ContextMenuStack;
+import org.got5.tapestry5.jquery.services.javascript.DDSlickStack;
 import org.got5.tapestry5.jquery.services.javascript.DataTableStack;
+import org.got5.tapestry5.jquery.services.javascript.FlexSliderStack;
 import org.got5.tapestry5.jquery.services.javascript.FormFragmentSupportStack;
 import org.got5.tapestry5.jquery.services.javascript.FormSupportStack;
 import org.got5.tapestry5.jquery.services.javascript.GalleryStack;
+import org.got5.tapestry5.jquery.services.javascript.InPlaceEditorStack;
 import org.got5.tapestry5.jquery.services.javascript.JQueryDateFieldStack;
 import org.got5.tapestry5.jquery.services.javascript.JQueryJavaScriptStack;
+import org.got5.tapestry5.jquery.services.javascript.JScrollPaneStack;
+import org.got5.tapestry5.jquery.services.javascript.PlaceholderStack;
 import org.got5.tapestry5.jquery.services.javascript.SuperfishStack;
 import org.got5.tapestry5.jquery.services.javascript.widgets.Slider;
 import org.got5.tapestry5.jquery.services.js.JSModule;
+import org.got5.tapestry5.jquery.services.messages.MessageProvider;
+import org.got5.tapestry5.jquery.services.messages.MessageProviderImpl;
 
 @SubModule(JSModule.class)
 public class JQueryModule
@@ -84,6 +95,13 @@ public class JQueryModule
         configuration.addInstance(AjaxUploadStack.STACK_ID, AjaxUploadStack.class);
         configuration.addInstance(GalleryStack.STACK_ID, GalleryStack.class);
         configuration.addInstance(DataTableStack.STACK_ID, DataTableStack.class);
+        configuration.addInstance(InPlaceEditorStack.STACK_ID, InPlaceEditorStack.class);
+        configuration.addInstance(PlaceholderStack.STACK_ID, PlaceholderStack.class);
+        configuration.addInstance(DDSlickStack.STACK_ID, DDSlickStack.class);
+        configuration.addInstance(JScrollPaneStack.STACK_ID, JScrollPaneStack.class);
+		configuration.addInstance(ConfirmStack.STACK_ID, ConfirmStack.class);
+		configuration.addInstance(ContextMenuStack.STACK_ID, ContextMenuStack.class);
+        configuration.addInstance(FlexSliderStack.STACK_ID, FlexSliderStack.class);
     }
 
     public static void contributeComponentClassResolver(Configuration<LibraryMapping> configuration)
@@ -93,25 +111,31 @@ public class JQueryModule
 
     @Contribute(SymbolProvider.class)
     @FactoryDefaults
-    public static void contributeFactoryDefaults(MappedConfiguration<String, String> configuration)
+    public static void contributeFactoryDefaults(MappedConfiguration<String, Object> configuration)
     {
         configuration.add(JQuerySymbolConstants.TAPESTRY_JQUERY_PATH, "classpath:org/got5/tapestry5/jquery");
         configuration.add(JQuerySymbolConstants.TAPESTRY_JS_PATH, "classpath:org/got5/tapestry5/tapestry.js");
 
+
         configuration.add(JQuerySymbolConstants.JQUERY_CORE_PATH, "classpath:org/got5/tapestry5/jquery/jquery_core/jquery-1.7.2.js");
         configuration.add(JQuerySymbolConstants.JQUERY_VERSION, "1.7.2");
 
-        configuration.add(JQuerySymbolConstants.JQUERY_UI_PATH, "classpath:org/got5/tapestry5/jquery/ui_1_8_19");
-        configuration.add(JQuerySymbolConstants.JQUERY_UI_DEFAULT_THEME, "classpath:org/got5/tapestry5/jquery/themes/ui-lightness/jquery-ui-1.8.19.custom.css");
+
+        configuration.add(JQuerySymbolConstants.JQUERY_UI_PATH, "classpath:org/got5/tapestry5/jquery/ui_1_8_24");
+        configuration.add(JQuerySymbolConstants.JQUERY_UI_DEFAULT_THEME, "classpath:org/got5/tapestry5/jquery/themes/ui-lightness/jquery-ui.css");
 
         configuration.add(JQuerySymbolConstants.JQUERY_VALIDATE_PATH, "classpath:org/got5/tapestry5/jquery/validate/1_7");
-        configuration.add(JQuerySymbolConstants.SUPPRESS_PROTOTYPE, "true");
+        configuration.add(JQuerySymbolConstants.SUPPRESS_PROTOTYPE, true);
         configuration.add(JQuerySymbolConstants.JQUERY_ALIAS, "$");
 
         configuration.add(JQuerySymbolConstants.ASSETS_PATH, "classpath:org/got5/tapestry5/jquery/assets");
         configuration.add(JQuerySymbolConstants.PARAMETER_PREFIX, "tjq-");
         configuration.add(JQuerySymbolConstants.USE_MINIFIED_JS, SymbolConstants.PRODUCTION_MODE_VALUE);
+        
+        configuration.add(JQuerySymbolConstants.ADD_MOUSEWHEEL_EVENT, false);
+        configuration.add(JQuerySymbolConstants.INCLUDE_DATEPICKER_I18N, true);
 
+        configuration.add(JQuerySymbolConstants.EXCLUDE_CORE_JS_STACK, false);
     }
 
     public static void contributeClasspathAssetAliasManager(MappedConfiguration<String, String> configuration)
@@ -134,6 +158,8 @@ public class JQueryModule
       binder.bind(BindingFactory.class,SelectorBindingFactory.class).withId("SelectorBindingFactory");
       binder.bind(RenderTracker.class, RenderTrackerImpl.class);
       binder.bind(AjaxUploadDecoder.class, AjaxUploadDecoderImpl.class).scope(ScopeConstants.PERTHREAD);
+      binder.bind(JavaScriptFilesConfiguration.class, JavaScriptFilesConfigurationImpl.class);
+	  binder.bind(MessageProvider.class, MessageProviderImpl.class);
     }
 
 
@@ -146,6 +172,23 @@ public class JQueryModule
     	configuration.add(EffectsConstants.HIGHLIGHT);
     	configuration.add(EffectsConstants.SHOW);
     }
+    
+    @Contribute(JavaScriptFilesConfiguration.class)
+    public void addJavaScriptFilesRules(MappedConfiguration<String, String> configuration){
+
+    	configuration.add("t5-prototype.js", "${tapestry.jquery.path}/t5-jquery.js");
+    	configuration.add("tapestry.js", "${tapestry.jquery.path}/tapestry-jquery.js");
+    	configuration.add("t5-console.js", "${tapestry.jquery.path}/t5-console-jquery.js");
+    	configuration.add("t5-dom.js", "${tapestry.jquery.path}/t5-dom-jquery.js");
+    	configuration.add("t5-alerts.js", "${tapestry.jquery.path}/t5-alerts-jquery.js");
+    	configuration.add("t5-ajax.js", "${tapestry.jquery.path}/t5-ajax-jquery.js");
+    	configuration.add("tree.js", "${tapestry.jquery.path}/t5-tree-jquery.js");
+    	configuration.add("prototype.js", "");
+    	configuration.add("scriptaculous.js", "");
+    	configuration.add("effects.js", "");
+    	configuration.add("exceptiondisplay.js", "");
+    }
+    
 
     @Contribute(ComponentClassTransformWorker2.class)
     @Primary
@@ -197,4 +240,11 @@ public class JQueryModule
 		if(prototype)
 			receiver.adviseMethod(receiver.getInterface().getMethod("createAsset", Resource.class),advise);
     }
+	
+	public static void contributeComponentMessagesSource (
+			@Value("/org/got5/tapestry5/JQueryCatalog.properties") Resource jQueryCatalog,
+			OrderedConfiguration<Resource> configuration) {
+		//Catalog used to store messages from mixins
+		configuration.add("JQueryCatalog", jQueryCatalog);
+	}
 }

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.got5</groupId>
 	<artifactId>tapestry5-jquery</artifactId>
-	<version>3.3.1-SNAPSHOT</version>
+	<version>3.3.9</version>
 	<packaging>jar</packaging>
 	<name>Tapestry 5 JQuery Library</name>
 	<description>Tapestry Components Library</description>
@@ -170,7 +170,7 @@
 		<dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.2.2</version>
+            <version>1.3.1</version>
         </dependency>
 		<dependency>
 			<groupId>org.testng</groupId>
@@ -208,6 +208,7 @@
 	
 	<build>
 		<finalName>tapestry-jquery</finalName>
+		<sourceDirectory>${sourceDirectory}</sourceDirectory>
         	<resources>
                   <resource>
                       <directory>src/test/conf</directory>
@@ -448,15 +449,36 @@
 
     <distributionManagement>
 		<repository>
-			<id>devlab722-repo</id>
-			<url>http://nexus.devlab722.net/nexus/content/repositories/releases</url>
+			<id>${release-id}</id>
+			<url>${kazan-public-releases-repo-url}</url>
 		</repository>
 		<snapshotRepository>
-			<id>devlab722-snapshot-repo</id>
-			<url>http://nexus.devlab722.net/nexus/content/repositories/snapshots</url>
+			<id>${snapshot-id}</id>
+			<url>${kazan-public-snapshots-repo-url}</url>
 		</snapshotRepository>
 	</distributionManagement>
+
 	<profiles>
+	    <profile>
+			<id>opensource</id>
+			<activation> 
+				<activeByDefault>true</activeByDefault> 
+			</activation> 
+			<properties>
+				<release-id>devlab722-repo</release-id>
+				<snapshot-id>devlab722-snapshot-repo</snapshot-id>
+			</properties>
+        </profile>
+	    <profile>
+			<id>kazan-package</id>
+			<activation> 
+				<activeByDefault>false</activeByDefault> 
+			</activation> 
+			<properties>
+				<release-id>kazan-release-repo</release-id>
+				<snapshot-id>kazan-snapshot-repo</snapshot-id>
+			</properties>
+        </profile>        
         <profile>
             <id>mac-os-test</id>
             <activation>
@@ -470,7 +492,10 @@
 	
 	<properties>
 		<spock-version>0.6-groovy-1.8</spock-version>
-		<tapestry-release-version>5.3.4</tapestry-release-version>
-	    <browserStartCommand>*firefox</browserStartCommand>
+		<tapestry-release-version>5.3.8</tapestry-release-version>
+                <browserStartCommand>*googlechrome</browserStartCommand>
+                <sourceDirectory>src/main/java</sourceDirectory>
+		<kazan-public-releases-repo-url>http://nexus.devlab722.net/nexus/content/repositories/releases</kazan-public-releases-repo-url>
+		<kazan-public-snapshots-repo-url>http://nexus.devlab722.net/nexus/content/repositories/snapshots</kazan-public-snapshots-repo-url> 
 	</properties>
 </project>

@@ -35,23 +35,23 @@ public class AppModule
 {	
 	@Contribute(SymbolProvider.class)
 	@ApplicationDefaults
-    public static void contributeApplicationDefaults(MappedConfiguration<String, String> configuration)
+    public static void contributeApplicationDefaults(MappedConfiguration<String, Object> configuration)
     {
     	configuration.add(SymbolConstants.SUPPORTED_LOCALES, "en,fr,de,ru,ua");
     	
-    	configuration.add(SymbolConstants.PRODUCTION_MODE, "false");
+    	configuration.add(SymbolConstants.PRODUCTION_MODE, false);
     	
-    	configuration.add(SymbolConstants.COMBINE_SCRIPTS, "false");
+    	configuration.add(SymbolConstants.COMBINE_SCRIPTS, false);
     	
-    	configuration.add(SymbolConstants.COMPRESS_WHITESPACE, "false");
+    	configuration.add(SymbolConstants.COMPRESS_WHITESPACE, false);
         
-    	configuration.add(SymbolConstants.GZIP_COMPRESSION_ENABLED, "false");
+    	configuration.add(SymbolConstants.GZIP_COMPRESSION_ENABLED, false);
     	
-    	configuration.add(JQuerySymbolConstants.SUPPRESS_PROTOTYPE, "true");
+    	configuration.add(JQuerySymbolConstants.SUPPRESS_PROTOTYPE, true);
     	
-    	configuration.add(JQuerySymbolConstants.JQUERY_ALIAS, "$");
+    	configuration.add("demo-src-dir", "");
     	
-    	configuration.add(JQuerySymbolConstants.JQUERY_UI_DEFAULT_THEME, "context:css/south-street/jquery-ui-1.8.19.custom.css");
+    	configuration.add(JQuerySymbolConstants.JQUERY_UI_DEFAULT_THEME, "context:css/south-street/jquery-ui.css");
     }
     
 	@Contribute(WidgetParams.class)
@@ -83,5 +83,5 @@ public class AppModule
 	public void addEffectsFile(Configuration<String> configuration){
 		configuration.add(EffectsConstants.SHAKE);
 	}
-
+	
 }
